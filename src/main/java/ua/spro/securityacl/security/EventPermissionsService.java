@@ -13,9 +13,11 @@ public class EventPermissionsService {
 
   private final UserRepository userRepository;
 
-  public boolean hasPermissions(Authentication authentication, Long id) {
+  public boolean hasPermissions(Authentication authentication, Long eventId, String permission) {
     UserDetails userDetails = (UserDetails) authentication.getPrincipal();
     User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-    return user.getCreatedEvents().stream().anyMatch(event -> event.getId().equals(id));
+    return user.getPermissions().stream()
+        .anyMatch(
+            p -> p.getPermission().equals(permission) && p.getEvent().getId().equals(eventId));
   }
 }

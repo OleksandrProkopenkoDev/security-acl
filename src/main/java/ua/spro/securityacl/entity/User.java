@@ -6,6 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -43,4 +45,11 @@ public class User {
 
   @OneToMany(mappedBy = "creator", fetch = FetchType.EAGER)
   private List<Event> createdEvents = new ArrayList<>();
+
+  @ManyToMany
+  @JoinTable(
+      name = "users_permissions",
+      joinColumns = @JoinColumn(name = "permission_id"),
+      inverseJoinColumns = @JoinColumn(name = "user_id"))
+  private List<PermissionEntry> permissions = new ArrayList<>();
 }
