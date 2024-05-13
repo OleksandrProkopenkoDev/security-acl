@@ -4,10 +4,9 @@ import java.io.Serializable;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import ua.spro.securityacl.entity.Event;
 import ua.spro.securityacl.entity.PermissionEntry;
 
-public class EventPermissionEvaluator implements PermissionEvaluator {
+public abstract class TargetedPermissionEvaluator implements PermissionEvaluator {
 
   @Override
   public boolean hasPermission(
@@ -16,10 +15,18 @@ public class EventPermissionEvaluator implements PermissionEvaluator {
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
       return userDetails.getAuthorities().stream()
           .map(PermissionEntry.class::cast)
-          .anyMatch(
+          .filter(
               p ->
-                  p.getPermission().equals(permission)
-                      && p.getEvent().getId().equals(((Event) targetDomainObject).getId()));
+                  targetDomainObject
+                      .getClass()
+                      .getSimpleName()
+                      .equals(p.getTargetDomainObjectType()))
+          .filter(
+              p ->
+                  p.getTargetDomainObjectId() != null
+                      && Long.valueOf(p.getTargetDomainObjectId())
+                          .equals(getId(targetDomainObject)))
+          .anyMatch(p -> p.getPermission().equals(permission));
     }
     return false;
   }
@@ -31,9 +38,10 @@ public class EventPermissionEvaluator implements PermissionEvaluator {
 
     return userDetails.getAuthorities().stream()
         .map(PermissionEntry.class::cast)
-        .anyMatch(
-            p ->
-                p.getPermission().equals(permission)
-                    && p.getEvent().getId().equals(Long.valueOf(targetId.toString())));
+        .filter(p -> targetType.equals(p.getTargetDomainObjectType()))
+        .filter(p -> p.getTargetDomainObjectId() != null && Long.valueOf(p.getTargetDomainObjectId()).equals(targetId))
+        .anyMatch(p -> p.getPermission().equals(permission));
   }
+
+  public abstract Object getId(Object targetDomainObject);
 }

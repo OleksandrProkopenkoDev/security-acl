@@ -28,7 +28,7 @@ Content-Type: application/json
 
 {
   "title": "Party",
-  "description": "bla bla bla :) 2",
+  "description": "bla bla bla :) 3",
   "startDateTime": "2024-01-28T18:00:00",
   "endDateTime": "2024-01-28T21:00:00",
   "userIds": [2]

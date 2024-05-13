@@ -69,7 +69,7 @@ public class EventController {
     return mapToEventDto(saved);
   }
 
-  @PreAuthorize("hasPermission(#id, '', 'WRITE')")
+  @PreAuthorize("hasPermission(#id, 'Event', 'WRITE')")
   @PatchMapping("/{id}")
   @Transactional
   public EventDto updateEvent(

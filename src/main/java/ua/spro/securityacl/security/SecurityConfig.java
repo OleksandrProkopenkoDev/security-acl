@@ -1,5 +1,6 @@
 package ua.spro.securityacl.security;
 
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import ua.spro.securityacl.entity.Equipment;
+import ua.spro.securityacl.entity.Event;
 import ua.spro.securityacl.repository.UserRepository;
 
 @Configuration
@@ -61,15 +64,6 @@ public class SecurityConfig {
     return PasswordEncoderFactories.createDelegatingPasswordEncoder();
   }
 
-  //  @Bean
-  //  Advisor preAuthorizeAuthorizationMethodInterceptor() {
-  //    PreAuthorizeAuthorizationManager authorizationManager = new
-  // PreAuthorizeAuthorizationManager();
-  //    authorizationManager.setExpressionHandler(methodSecurityExpressionHandler());
-  //
-  //    return AuthorizationManagerBeforeMethodInterceptor.preAuthorize(authorizationManager);
-  //  }
-
   @Bean
   MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
     var expressionHandler = new DefaultMethodSecurityExpressionHandler();
@@ -79,6 +73,19 @@ public class SecurityConfig {
 
   @Bean
   PermissionEvaluator permissionEvaluator() {
-    return new EventPermissionEvaluator();
+    return new PermissionEvaluatorCompositor(Map.of(
+        Event.class.getSimpleName(), new TargetedPermissionEvaluator() {
+          @Override
+          public Object getId(Object targetDomainObject) {
+            return ((Event)targetDomainObject).getId();
+          }
+        },
+        Equipment.class.getSimpleName(), new TargetedPermissionEvaluator() {
+          @Override
+          public Object getId(Object targetDomainObject) {
+            return ((Equipment)targetDomainObject).getId();
+          }
+        }
+    ));
   }
 }

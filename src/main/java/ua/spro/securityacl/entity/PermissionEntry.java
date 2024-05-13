@@ -24,12 +24,11 @@ public class PermissionEntry implements GrantedAuthority {
 
   private String permission;
 
-  @ManyToOne
-  private Event event;
+  private String targetDomainObjectType;
+  private String targetDomainObjectId;
 
   @ManyToMany(mappedBy = "permissions")
   private List<User> users = new ArrayList<>();
-
 
   @Override
   public String getAuthority() {
