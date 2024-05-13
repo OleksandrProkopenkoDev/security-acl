@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.PermissionEvaluator;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -56,5 +59,26 @@ public class SecurityConfig {
   @Bean
   PasswordEncoder passwordEncoder() {
     return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+  }
+
+  //  @Bean
+  //  Advisor preAuthorizeAuthorizationMethodInterceptor() {
+  //    PreAuthorizeAuthorizationManager authorizationManager = new
+  // PreAuthorizeAuthorizationManager();
+  //    authorizationManager.setExpressionHandler(methodSecurityExpressionHandler());
+  //
+  //    return AuthorizationManagerBeforeMethodInterceptor.preAuthorize(authorizationManager);
+  //  }
+
+  @Bean
+  MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+    var expressionHandler = new DefaultMethodSecurityExpressionHandler();
+    expressionHandler.setPermissionEvaluator(permissionEvaluator());
+    return expressionHandler;
+  }
+
+  @Bean
+  PermissionEvaluator permissionEvaluator() {
+    return new EventPermissionEvaluator();
   }
 }

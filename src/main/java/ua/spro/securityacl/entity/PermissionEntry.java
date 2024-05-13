@@ -11,11 +11,12 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
 
 @Getter
 @Setter
 @Entity
-public class PermissionEntry {
+public class PermissionEntry implements GrantedAuthority {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(unique = true, nullable = false)
@@ -28,4 +29,10 @@ public class PermissionEntry {
 
   @ManyToMany(mappedBy = "permissions")
   private List<User> users = new ArrayList<>();
+
+
+  @Override
+  public String getAuthority() {
+    return permission;
+  }
 }
