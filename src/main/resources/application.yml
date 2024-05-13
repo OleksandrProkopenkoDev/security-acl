@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: security-acl
+
+  datasource:
+    url: jdbc:postgresql://localhost:5434/acl_security
+    username: admin
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8083
