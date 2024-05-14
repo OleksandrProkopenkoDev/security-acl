@@ -1,7 +1,11 @@
 package ua.spro.securityacl.security;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,6 +73,14 @@ public class AclConfig {
   @Bean
   SpringCacheBasedAclCache aclCache() {
     return new SpringCacheBasedAclCache(
-        new ConcurrentMapCache("acl"), permissionGrantingStrategy(), aclAuthorizationStrategy());
+        caffeineCache(), permissionGrantingStrategy(), aclAuthorizationStrategy());
+  }
+
+  @Bean
+  Cache caffeineCache() {
+    var caffeineCacheManager = new CaffeineCacheManager();
+    caffeineCacheManager.setCaffeine(
+        Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).maximumSize(100));
+    return caffeineCacheManager.getCache("acl");
   }
 }
