@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
@@ -16,6 +18,7 @@ import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,24 +43,27 @@ public class EventController {
   private final UserRepository userRepository;
   private final JdbcMutableAclService aclService;
 
+  @PostAuthorize("hasPermission(returnObject, 'READ')")
   @GetMapping("/created-by-me")
   public List<EventDto> getMyEvents(@AuthenticationPrincipal UserDetails userDetails) {
     String email = userDetails.getUsername();
     return userRepository.findByEmail(email).stream()
         .flatMap(user -> user.getCreatedEvents().stream())
         .map(this::mapToEventDto)
-        .toList();
+        .collect(Collectors.toList());
   }
 
+  @PostFilter("hasPermission(filterObject.id(), 'ua.spro.securityacl.entity.Event', 'READ')")
   @GetMapping("/participating")
   public List<EventDto> getParticipatingEvents(@AuthenticationPrincipal UserDetails userDetails) {
     String email = userDetails.getUsername();
     return userRepository.findByEmail(email).stream()
         .flatMap(user -> user.getEvents().stream())
         .map(this::mapToEventDto)
-        .toList();
+        .collect(Collectors.toList());
   }
 
+  @PreAuthorize("hasAuthority('CREATE_EVENT')")
   @PostMapping
   @Transactional
   public EventDto createEvent(
@@ -107,6 +113,12 @@ public class EventController {
     return mapToEventDto(saved);
   }
 
+  @PreAuthorize("hasPermission(#id, 'ua.spro.securityacl.entity.Event', 'DELETE')")
+  @DeleteMapping("/{id}")
+  public void deleteEvent(@PathVariable Long id) {
+    eventRepository.deleteById(id);
+  }
+
   private EventDto mapToEventDto(Event event) {
     return new EventDto(
         event.getId(),
@@ -120,7 +132,7 @@ public class EventController {
   private List<UserDto> mapToUserDtos(List<User> users) {
     return users.stream()
         .map(user -> new UserDto(user.getEmail(), user.getFirstname(), user.getLastname()))
-        .toList();
+        .collect(Collectors.toList());
   }
 
   private List<User> getParticipants(CreateUpdateEventDto createUpdateEventDto) {

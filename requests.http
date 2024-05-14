@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Update existing event
-PATCH http://localhost:8083/api/events/1
+PATCH http://localhost:8083/api/events/2
 Content-Type: application/json
 
 {
@@ -33,6 +33,10 @@ Content-Type: application/json
   "endDateTime": "2024-01-28T21:00:00",
   "userIds": [2]
 }
+
+### Get participationg Events
+GET http://localhost:8083/api/events/participating
+Content-Type: application/json
 
 ### Logout
 POST http://localhost:8083/logout
