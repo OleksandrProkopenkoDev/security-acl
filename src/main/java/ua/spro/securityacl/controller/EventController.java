@@ -13,7 +13,6 @@ import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.jdbc.JdbcMutableAclService;
-import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -80,10 +79,9 @@ public class EventController {
 
     Event saved = eventRepository.save(event);
 
-    PrincipalSid sid = new PrincipalSid(
-        SecurityContextHolder.getContext().getAuthentication());
-    ObjectIdentityImpl objectIdentity = new ObjectIdentityImpl(Event.class.getName(),
-        saved.getId());
+    PrincipalSid sid = new PrincipalSid(SecurityContextHolder.getContext().getAuthentication());
+    ObjectIdentityImpl objectIdentity =
+        new ObjectIdentityImpl(Event.class.getName(), saved.getId());
     MutableAcl acl = aclService.createAcl(objectIdentity);
     acl.setOwner(sid);
     acl.insertAce(0, BasePermission.WRITE, sid, true);
