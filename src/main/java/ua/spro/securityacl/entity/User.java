@@ -45,11 +45,4 @@ public class User {
 
   @OneToMany(mappedBy = "creator", fetch = FetchType.EAGER)
   private List<Event> createdEvents = new ArrayList<>();
-
-  @ManyToMany
-  @JoinTable(
-      name = "users_permissions",
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "permission_id"))
-  private List<PermissionEntry> permissions = new ArrayList<>();
 }

@@ -7,7 +7,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.ObjectIdentityImpl;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.jdbc.JdbcMutableAclService;
+import org.springframework.security.acls.model.AclService;
+import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,6 +38,7 @@ public class EventController {
 
   private final EventRepository eventRepository;
   private final UserRepository userRepository;
+  private final JdbcMutableAclService aclService;
 
   @GetMapping("/created-by-me")
   public List<EventDto> getMyEvents(@AuthenticationPrincipal UserDetails userDetails) {
@@ -66,10 +74,19 @@ public class EventController {
 
     Event saved = eventRepository.save(event);
 
+    PrincipalSid sid = new PrincipalSid(
+        SecurityContextHolder.getContext().getAuthentication());
+    ObjectIdentityImpl objectIdentity = new ObjectIdentityImpl(Event.class.getName(),
+        saved.getId());
+    MutableAcl acl = aclService.createAcl(objectIdentity);
+    acl.setOwner(sid);
+    acl.insertAce(0, BasePermission.WRITE, sid, true);
+    aclService.updateAcl(acl);
+
     return mapToEventDto(saved);
   }
 
-  @PreAuthorize("hasPermission(#id, 'Event', 'WRITE')")
+  @PreAuthorize("hasPermission(#id, 'ua.spro.securityacl.entity.Event', 'WRITE')")
   @PatchMapping("/{id}")
   @Transactional
   public EventDto updateEvent(

@@ -15,7 +15,7 @@ POST http://localhost:8083/api/events
 Content-Type: application/json
 
 {
-  "title": "Party",
+  "title": "Party1",
   "description": "bla bla bla",
   "startDateTime": "2024-01-28T18:00:00",
   "endDateTime": "2024-01-28T21:00:00"

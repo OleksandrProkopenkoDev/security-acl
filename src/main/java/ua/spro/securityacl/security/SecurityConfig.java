@@ -1,13 +1,9 @@
 package ua.spro.securityacl.security;
 
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.PermissionEvaluator;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,8 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import ua.spro.securityacl.entity.Equipment;
-import ua.spro.securityacl.entity.Event;
 import ua.spro.securityacl.repository.UserRepository;
 
 @Configuration
@@ -64,28 +58,4 @@ public class SecurityConfig {
     return PasswordEncoderFactories.createDelegatingPasswordEncoder();
   }
 
-  @Bean
-  MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-    var expressionHandler = new DefaultMethodSecurityExpressionHandler();
-    expressionHandler.setPermissionEvaluator(permissionEvaluator());
-    return expressionHandler;
-  }
-
-  @Bean
-  PermissionEvaluator permissionEvaluator() {
-    return new PermissionEvaluatorCompositor(Map.of(
-        Event.class.getSimpleName(), new TargetedPermissionEvaluator() {
-          @Override
-          public Object getId(Object targetDomainObject) {
-            return ((Event)targetDomainObject).getId();
-          }
-        },
-        Equipment.class.getSimpleName(), new TargetedPermissionEvaluator() {
-          @Override
-          public Object getId(Object targetDomainObject) {
-            return ((Equipment)targetDomainObject).getId();
-          }
-        }
-    ));
-  }
 }
