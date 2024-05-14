@@ -38,5 +38,20 @@ Content-Type: application/json
 GET http://localhost:8083/api/events/participating
 Content-Type: application/json
 
+### Add permission
+POST http://localhost:8083/api/acl
+Content-Type: application/json
+
+{
+  "objectIdentity": {
+    "type": "ua.spro.securityacl.entity.Event",
+    "id": 1
+  },
+  "userId": 2,
+  "permission": 2,
+  "granting": true
+}
+
+
 ### Logout
 POST http://localhost:8083/logout
