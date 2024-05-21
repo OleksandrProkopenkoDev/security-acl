@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PostAuthorize;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.acls.domain.BasePermission;
@@ -14,6 +14,7 @@ import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.jdbc.JdbcMutableAclService;
 import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ua.spro.securityacl.dto.AddPermissionDto;
+import ua.spro.securityacl.dto.AddPermissionDto.ObjectIdentityDto;
 import ua.spro.securityacl.dto.CreateUpdateEventDto;
 import ua.spro.securityacl.dto.EventDto;
 import ua.spro.securityacl.dto.UserDto;
@@ -32,7 +35,9 @@ import ua.spro.securityacl.entity.Event;
 import ua.spro.securityacl.entity.User;
 import ua.spro.securityacl.repository.EventRepository;
 import ua.spro.securityacl.repository.UserRepository;
+import ua.spro.securityacl.service.AclService;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
@@ -40,9 +45,18 @@ public class EventController {
 
   private final EventRepository eventRepository;
   private final UserRepository userRepository;
-  private final JdbcMutableAclService aclService;
+  private final JdbcMutableAclService jdbcMutableAclService;
+  private final AclService aclService;
 
-  @PostAuthorize("hasPermission(returnObject, 'READ')")
+  @PostFilter("hasPermission(filterObject.id(), 'ua.spro.securityacl.entity.Event', 'READ')")
+  @GetMapping
+  public List<EventDto> findAllEvents(@AuthenticationPrincipal UserDetails userDetails) {
+    String email = userDetails.getUsername();
+    log.info("user: {}", email);
+    return eventRepository.findAll().stream().map(this::mapToEventDto).collect(Collectors.toList());
+  }
+
+  @PostFilter("hasPermission(filterObject.id(), 'ua.spro.securityacl.entity.Event', 'READ')")
   @GetMapping("/created-by-me")
   public List<EventDto> getMyEvents(@AuthenticationPrincipal UserDetails userDetails) {
     String email = userDetails.getUsername();
@@ -62,7 +76,26 @@ public class EventController {
         .collect(Collectors.toList());
   }
 
-  @PreAuthorize("hasAuthority('CREATE_EVENT')")
+  @Transactional
+  @PatchMapping("/participating/{id}")
+  public List<EventDto> participateEvent(
+      @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+    String email = userDetails.getUsername();
+    User user = userRepository.findByEmail(email).orElseThrow();
+
+    Event event = eventRepository.findById(id).orElseThrow();
+    event.getUsers().add(user);
+    user.getEvents().add(event);
+    user = userRepository.save(user);
+
+    aclService.addPermission(
+        new AddPermissionDto(
+            new ObjectIdentityDto(Event.class.getName(), event.getId()), user.getId(), 1, true));
+
+    return user.getEvents().stream().map(this::mapToEventDto).collect(Collectors.toList());
+  }
+
+  @PreAuthorize("hasAuthority('ROLE_MANAGER')")
   @PostMapping
   @Transactional
   public EventDto createEvent(
@@ -79,13 +112,16 @@ public class EventController {
 
     Event saved = eventRepository.save(event);
 
-    PrincipalSid sid = new PrincipalSid(SecurityContextHolder.getContext().getAuthentication());
+   /* PrincipalSid sid =
+        new PrincipalSid(SecurityContextHolder.getContext().getAuthentication().getName());
     ObjectIdentityImpl objectIdentity =
         new ObjectIdentityImpl(Event.class.getName(), saved.getId());
-    MutableAcl acl = aclService.createAcl(objectIdentity);
+    MutableAcl acl = jdbcMutableAclService.createAcl(objectIdentity);
     acl.setOwner(sid);
     acl.insertAce(0, BasePermission.WRITE, sid, true);
-    aclService.updateAcl(acl);
+
+    acl.insertAce(0, BasePermission.READ, sid, true);
+    jdbcMutableAclService.updateAcl(acl);*/
 
     return mapToEventDto(saved);
   }
@@ -95,6 +131,7 @@ public class EventController {
   @Transactional
   public EventDto updateEvent(
       @PathVariable Long id, @RequestBody CreateUpdateEventDto updateEventDto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Event event =
         eventRepository
             .findById(id)

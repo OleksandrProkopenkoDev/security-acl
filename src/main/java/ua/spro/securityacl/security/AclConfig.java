@@ -47,8 +47,8 @@ public class AclConfig {
     JdbcMutableAclService jdbcMutableAclService =
         new JdbcMutableAclService(dataSource, lookupStrategy(), aclCache());
 
-    jdbcMutableAclService.setClassIdentityQuery("SELECT currval('event_id_seq')");
-    jdbcMutableAclService.setSidIdentityQuery("SELECT currval('event_id_seq')");
+    //    jdbcMutableAclService.setClassIdentityQuery("SELECT currval('event_id_seq')");
+    //    jdbcMutableAclService.setSidIdentityQuery("SELECT currval('event_id_seq')");
     jdbcMutableAclService.setAclClassIdSupported(false);
 
     return jdbcMutableAclService;
@@ -56,7 +56,10 @@ public class AclConfig {
 
   @Bean
   AclAuthorizationStrategy aclAuthorizationStrategy() {
-    return new AclAuthorizationStrategyImpl(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    return new AclAuthorizationStrategyImpl(
+        new SimpleGrantedAuthority("ROLE_ADMIN"),
+        new SimpleGrantedAuthority("ROLE_MANAGER"),
+        new SimpleGrantedAuthority("ROLE_USER"));
   }
 
   @Bean

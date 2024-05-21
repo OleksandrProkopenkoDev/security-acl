@@ -1,6 +1,6 @@
 package ua.spro.securityacl.security;
 
-import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -16,7 +16,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
   private final UserRepository userRepository;
 
-
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     return userRepository
@@ -26,7 +25,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                 new User(
                     user.getEmail(),
                     user.getPassword(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_MANAGER"))))
+                    List.of(
+                        new SimpleGrantedAuthority("ROLE_MANAGER")
+//                        new SimpleGrantedAuthority("ROLE_ADMIN")
+                    )
+                ))
         .orElseThrow(() -> new UsernameNotFoundException(username));
   }
 }

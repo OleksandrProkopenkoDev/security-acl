@@ -45,4 +45,11 @@ public class Event {
       joinColumns = @JoinColumn(name = "event_id"),
       inverseJoinColumns = @JoinColumn(name = "user_id"))
   private List<User> users = new ArrayList<>();
+
+  @ManyToMany
+  @JoinTable(
+      name = "equipments_events",
+      joinColumns = @JoinColumn(name = "event_id"),
+      inverseJoinColumns = @JoinColumn(name = "equipment_id"))
+  private List<Equipment> equipments = new ArrayList<>();
 }

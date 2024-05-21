@@ -2,9 +2,11 @@ package ua.spro.securityacl.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.Getter;
+
 
 public record EventDto(
-    Long id,
+    @Getter Long id,
     String title,
     String description,
     LocalDateTime startDateTime,

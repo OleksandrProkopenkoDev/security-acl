@@ -24,6 +24,8 @@ public class UserInitializer {
         "vasily@gmail.com", "vasily", "Vasily", "Vasily", LocalDate.of(1997, Month.APRIL, 15));
     createUserIfNotExists(
         "petro@gmail.com", "petro", "Petro", "Petro", LocalDate.of(1995, Month.AUGUST, 11));
+     createUserIfNotExists(
+        "mike@gmail.com", "mike", "Mike", "Mike", LocalDate.of(1993, Month.SEPTEMBER, 30));
   }
 
   private void createUserIfNotExists(

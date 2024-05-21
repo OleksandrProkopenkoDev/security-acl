@@ -34,7 +34,7 @@ Content-Type: application/json
   "userIds": [2]
 }
 
-### Get participationg Events
+### Get participating Events
 GET http://localhost:8083/api/events/participating
 Content-Type: application/json
 
